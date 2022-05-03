@@ -22,5 +22,11 @@
         "version_id": 1000000,
         "version_string": "1.0.0",
         "hash": "3d6a5b633ba035e66696e39e2ca93a69"
+    },
+    "con_acc_desc.asi_apple.txt": {
+        "global_cache": false,
+        "version_id": 1000100,
+        "version_string": "1.0.1",
+        "hash": "d41d8cd98f00b204e9800998ecf8427e"
     }
 }
