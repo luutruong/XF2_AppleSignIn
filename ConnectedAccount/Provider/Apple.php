@@ -122,6 +122,8 @@ class Apple extends AbstractProvider
         $stdToken->setAccessToken($token);
         $stdToken->setEndOfLife(StdOAuth2Token::EOL_UNKNOWN);
 
+        $storageState->storeToken($token);
+
         return $stdToken;
     }
 }
