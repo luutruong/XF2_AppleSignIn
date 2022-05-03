@@ -2,9 +2,9 @@
 
 namespace Truonglv\AppleSignIn\ConnectedAccount\ProviderData;
 
-use CoderCat\JWKToPEM\JWKConverter;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use CoderCat\JWKToPEM\JWKConverter;
 use XF\ConnectedAccount\ProviderData\AbstractProviderData;
 
 class Apple extends AbstractProviderData
@@ -40,9 +40,26 @@ class Apple extends AbstractProviderData
         return $user->email;
     }
 
+    public function getName(): string
+    {
+        $user = $this->getUser();
+        if ($user === null) {
+            throw new \LogicException('Cannot decode user');
+        }
+
+        return $user->name;
+    }
+
+    /**
+     * @param mixed $key
+     * @param mixed $method
+     * @param mixed $endpoint
+     * @return mixed
+     */
     public function requestFromEndpoint($key = null, $method = 'GET', $endpoint = null)
     {
-        throw new \LogicException('Not supported');
+        // not supported
+        return null;
     }
 
     protected function getAuthKeys(): array

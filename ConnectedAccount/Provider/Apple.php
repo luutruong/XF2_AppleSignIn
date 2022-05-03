@@ -4,8 +4,6 @@ namespace Truonglv\AppleSignIn\ConnectedAccount\Provider;
 
 use XF\Http\Request;
 use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
-use CoderCat\JWKToPEM\JWKConverter;
 use OAuth\OAuth2\Token\StdOAuth2Token;
 use XF\Entity\ConnectedAccountProvider;
 use XF\ConnectedAccount\Storage\StorageState;
@@ -64,7 +62,7 @@ class Apple extends AbstractProvider
     {
         return [
             'response_mode' => 'form_post',
-            'response_type' => 'code id_token',
+            'response_type' => 'id_token',
         ];
     }
 
