@@ -2,11 +2,14 @@
 
 namespace Truonglv\AppleSignIn\ConnectedAccount\Provider;
 
-use Firebase\JWT\JWT;
-use XF\ConnectedAccount\Storage\StorageState;
-use XF\Entity\ConnectedAccountProvider;
-use XF\ConnectedAccount\Provider\AbstractProvider;
 use XF\Http\Request;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use CoderCat\JWKToPEM\JWKConverter;
+use OAuth\OAuth2\Token\StdOAuth2Token;
+use XF\Entity\ConnectedAccountProvider;
+use XF\ConnectedAccount\Storage\StorageState;
+use XF\ConnectedAccount\Provider\AbstractProvider;
 
 class Apple extends AbstractProvider
 {
@@ -50,7 +53,6 @@ class Apple extends AbstractProvider
             'key' => $provider->options['client_id'],
             'secret' => $this->getClientSecret($provider->options),
             'redirect' => $redirectUri === null ? $this->getRedirectUri($provider) : $redirectUri,
-            'response_type' => 'code id_token',
             'scopes' => ['email', 'name']
         ];
     }
@@ -62,6 +64,7 @@ class Apple extends AbstractProvider
     {
         return [
             'response_mode' => 'form_post',
+            'response_type' => 'code id_token',
         ];
     }
 
@@ -93,8 +96,32 @@ class Apple extends AbstractProvider
      */
     public function requestProviderToken(StorageState $storageState, Request $request, &$error = null, $skipStoredToken = false)
     {
-        \XF::logError(__METHOD__);
+        $version = $this->getOAuthVersion();
+        $skipStoredToken = (bool) $skipStoredToken;
+        if (!$skipStoredToken) {
+            $token = $storageState->getProviderToken();
+            if ($token && $version == 2) {
+                return $token;
+            }
+        }
 
-        return parent::requestProviderToken($storageState, $request, $error, $skipStoredToken);
+        if ($request->filter('error', 'str') == 'access_denied' || $request->filter('denied', 'str')) {
+            $error = \XF::phraseDeferred('you_did_not_grant_permission_to_access_connected_account');
+
+            return false;
+        }
+
+        $token = $request->filter('id_token', 'str');
+        if ($token === '') {
+            $error = \XF::phraseDeferred('error_occurred_while_connecting_with_x', ['provider' => $this->getTitle()]);
+
+            return false;
+        }
+
+        $stdToken = new StdOAuth2Token();
+        $stdToken->setAccessToken($token);
+        $stdToken->setEndOfLife(StdOAuth2Token::EOL_UNKNOWN);
+
+        return $stdToken;
     }
 }

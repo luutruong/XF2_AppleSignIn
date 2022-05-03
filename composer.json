@@ -1,5 +1,6 @@
 {
     "require": {
-        "firebase/php-jwt": "^6.1"
+        "firebase/php-jwt": "^6.1",
+        "codercat/jwk-to-pem": "^1.1"
     }
 }
