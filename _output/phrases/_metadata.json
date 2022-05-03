@@ -1,0 +1,26 @@
+{
+    "asi_apple_client_id.txt": {
+        "global_cache": false,
+        "version_id": 1000000,
+        "version_string": "1.0.0",
+        "hash": "76525f0f34b48475e5ca33f71d296f3b"
+    },
+    "asi_apple_key_id.txt": {
+        "global_cache": false,
+        "version_id": 1000000,
+        "version_string": "1.0.0",
+        "hash": "eb71447de18ea0c424392fc3c2f3d2d8"
+    },
+    "asi_apple_private_key.txt": {
+        "global_cache": false,
+        "version_id": 1000000,
+        "version_string": "1.0.0",
+        "hash": "6eb9040e470e8018db394832a528f56a"
+    },
+    "asi_apple_team_id.txt": {
+        "global_cache": false,
+        "version_id": 1000000,
+        "version_string": "1.0.0",
+        "hash": "3d6a5b633ba035e66696e39e2ca93a69"
+    }
+}
