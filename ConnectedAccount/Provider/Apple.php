@@ -62,7 +62,7 @@ class Apple extends AbstractProvider
     {
         return [
             'response_mode' => 'form_post',
-            'response_type' => 'id_token',
+            'response_type' => 'code id_token',
         ];
     }
 
