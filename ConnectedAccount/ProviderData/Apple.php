@@ -77,7 +77,11 @@ class Apple extends AbstractProviderData
             return $this->cache[__METHOD__];
         }
 
-        $token = $this->storageState->getProviderToken();
+        $tokenProvider = $this->storageState->getProviderToken();
+        if ($tokenProvider === false) {
+            return null;
+        }
+        $token = $tokenProvider->getAccessToken();
 
         if (strlen($token) === 0) {
             return null;
