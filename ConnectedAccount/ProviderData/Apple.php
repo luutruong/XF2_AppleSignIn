@@ -40,16 +40,6 @@ class Apple extends AbstractProviderData
         return $user->email;
     }
 
-    public function getName(): string
-    {
-        $user = $this->getUser();
-        if ($user === null) {
-            throw new \LogicException('Cannot decode user');
-        }
-
-        return $user->name;
-    }
-
     /**
      * @param mixed $key
      * @param mixed $method
