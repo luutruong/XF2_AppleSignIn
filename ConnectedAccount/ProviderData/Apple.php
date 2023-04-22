@@ -37,6 +37,10 @@ class Apple extends AbstractProviderData
             throw new \LogicException('Cannot decode user');
         }
 
+        if (!isset($user->email)) {
+            throw new \LogicException('Apple did not give user email');
+        }
+
         return $user->email;
     }
 
