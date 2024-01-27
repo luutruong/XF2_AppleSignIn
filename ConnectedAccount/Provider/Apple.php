@@ -2,6 +2,7 @@
 
 namespace Truonglv\AppleSignIn\ConnectedAccount\Provider;
 
+use XF;
 use XF\Http\Request;
 use Firebase\JWT\JWT;
 use OAuth\OAuth2\Token\StdOAuth2Token;
@@ -104,14 +105,14 @@ class Apple extends AbstractProvider
         }
 
         if ($request->filter('error', 'str') == 'access_denied' || $request->filter('denied', 'str')) {
-            $error = \XF::phraseDeferred('you_did_not_grant_permission_to_access_connected_account');
+            $error = XF::phraseDeferred('you_did_not_grant_permission_to_access_connected_account');
 
             return false;
         }
 
         $token = $request->filter('id_token', 'str');
         if ($token === '') {
-            $error = \XF::phraseDeferred('error_occurred_while_connecting_with_x', ['provider' => $this->getTitle()]);
+            $error = XF::phraseDeferred('error_occurred_while_connecting_with_x', ['provider' => $this->getTitle()]);
 
             return false;
         }

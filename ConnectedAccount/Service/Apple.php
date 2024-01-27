@@ -2,6 +2,7 @@
 
 namespace Truonglv\AppleSignIn\ConnectedAccount\Service;
 
+use LogicException;
 use OAuth\Common\Http\Uri\Uri;
 use OAuth\OAuth2\Service\AbstractService;
 
@@ -16,7 +17,7 @@ class Apple extends AbstractService
      */
     protected function parseAccessTokenResponse($responseBody)
     {
-        throw new \LogicException('Not supported');
+        throw new LogicException('Not supported');
     }
 
     /**

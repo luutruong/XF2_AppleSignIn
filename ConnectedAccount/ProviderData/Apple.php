@@ -2,19 +2,29 @@
 
 namespace Truonglv\AppleSignIn\ConnectedAccount\ProviderData;
 
+use XF;
+use stdClass;
+use function time;
+use LogicException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use InvalidArgumentException;
 use CoderCat\JWKToPEM\JWKConverter;
 use XF\ConnectedAccount\ProviderData\AbstractProviderData;
 
 class Apple extends AbstractProviderData
 {
+    const CACHE_KEY_GET_USER = 'appleSignIn_getUser';
+    const APPLE_ISSUER = 'https://appleid.apple.com';
+
+    const APPLE_API_AUTH_KEYS = 'https://appleid.apple.com/auth/keys';
+
     /**
      * @return string
      */
     public function getDefaultEndpoint()
     {
-        throw new \LogicException('Not supported');
+        throw new LogicException('Not supported');
     }
 
     /**
@@ -23,9 +33,6 @@ class Apple extends AbstractProviderData
     public function getProviderKey()
     {
         $user = $this->getUser();
-        if ($user === null) {
-            throw new \LogicException('Cannot decode user');
-        }
 
         return $user->sub;
     }
@@ -33,12 +40,8 @@ class Apple extends AbstractProviderData
     public function getEmail(): string
     {
         $user = $this->getUser();
-        if ($user === null) {
-            throw new \LogicException('Cannot decode user');
-        }
-
         if (!isset($user->email)) {
-            throw new \LogicException('Apple did not give user email');
+            throw new LogicException('Apple did not give user email');
         }
 
         return $user->email;
@@ -58,56 +61,50 @@ class Apple extends AbstractProviderData
 
     protected function getAuthKeys(): array
     {
-        $authKeys = \XF::app()->simpleCache()->getValue(
+        $cacheData = XF::app()->simpleCache()->getValue(
             'Truonglv/AppleSignIn',
             'authKeys'
         );
-        if (is_array($authKeys)) {
-            return $authKeys;
+        if (is_array($cacheData) &&
+            isset($cacheData['expires']) &&
+            $cacheData['expires'] >= time()
+        ) {
+            return $cacheData['keys'];
         }
 
-        $client = \XF::app()->http()->client();
-        $response = $client->get('https://appleid.apple.com/auth/keys');
+        $client = XF::app()->http()->client();
+        $response = $client->get(static::APPLE_API_AUTH_KEYS);
 
         $json = json_decode($response->getBody()->getContents(), true);
         if (!isset($json['keys'])) {
-            throw new \InvalidArgumentException('Cannot fetch authKeys');
+            throw new InvalidArgumentException('Cannot fetch authKeys');
         }
-        \XF::app()->simpleCache()->setValue(
+        XF::app()->simpleCache()->setValue(
             'Truonglv/AppleSignIn',
             'authKeys',
-            $json['keys']
+            [
+                'expires' => time() + 86400,
+                'keys' => $json['keys'],
+            ]
         );
 
         return $json['keys'];
     }
 
-    protected function getUser(): ?\stdClass
+    protected function getUser(): stdClass
     {
-        if (isset($this->cache[__METHOD__])) {
-            return $this->cache[__METHOD__];
+        if (isset($this->cache[static::CACHE_KEY_GET_USER])) {
+            return $this->cache[static::CACHE_KEY_GET_USER];
         }
 
         $tokenProvider = $this->storageState->getProviderToken();
         if ($tokenProvider === false) {
-            return null;
+            throw new InvalidArgumentException('no token passed in provider');
         }
         $token = $tokenProvider->getAccessToken();
+        $this->assertValidJwtToken($token);
 
-        if (strlen($token) === 0) {
-            return null;
-        }
-
-        if (strpos($token, '.') === false) {
-            return null;
-        }
-
-        $parts = explode('.', $token);
-        if (count($parts) !== 3) {
-            return null;
-        }
-
-        $header = array_shift($parts);
+        list($header, , ) = \explode('.', $token);
         $header = JWT::jsonDecode(JWT::urlsafeB64Decode($header));
 
         $authKeys = $this->getAuthKeys();
@@ -121,35 +118,34 @@ class Apple extends AbstractProviderData
         }
 
         if ($foundAuthKey === null) {
-            return null;
+            throw new InvalidArgumentException('cannot find auth key: ' . $header->kid);
         }
 
         $jwkConverter = new JWKConverter();
+        $publicKey = $jwkConverter->toPEM($foundAuthKey);
 
-        try {
-            $publicKey = $jwkConverter->toPEM($foundAuthKey);
-        } catch (\Throwable $e) {
-            \XF::logException($e, false, '[tl] Sign in with Apple: ');
+        $decoded = JWT::decode($token, [
+            $header->kid => new Key($publicKey, $header->alg)
+        ]);
 
-            return null;
+        if ($decoded->iss !== static::APPLE_ISSUER) {
+            throw new InvalidArgumentException('invalid issuer: ' . $decoded->iss);
         }
 
-        try {
-            $decoded = JWT::decode($token, [
-                $header->kid => new Key($publicKey, $header->alg)
-            ]);
-        } catch (\Exception $e) {
-            \XF::logException($e, false, '[tl] Sign in with Apple: ');
-
-            return null;
-        }
-
-        if ($decoded->iss !== 'https://appleid.apple.com') {
-            return null;
-        }
-
-        $this->storeInCache(__METHOD__, $decoded);
+        $this->storeInCache(static::CACHE_KEY_GET_USER, $decoded);
 
         return $decoded;
+    }
+
+    protected function assertValidJwtToken(string $token): void
+    {
+        if (strlen($token) === 0) {
+            throw new InvalidArgumentException('token is empty');
+        }
+
+        $parts = explode('.', $token);
+        if (count($parts) !== 3) {
+            throw new InvalidArgumentException('invalid token format');
+        }
     }
 }
