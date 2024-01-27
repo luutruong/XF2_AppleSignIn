@@ -23,6 +23,12 @@
         "version_string": "1.0.0",
         "hash": "3d6a5b633ba035e66696e39e2ca93a69"
     },
+    "asi_connected_account_provider_apple.txt": {
+        "global_cache": false,
+        "version_id": 1000500,
+        "version_string": "1.0.5",
+        "hash": "9f6290f4436e5a2351f12e03b6433c3c"
+    },
     "con_acc_desc.asi_apple.txt": {
         "global_cache": false,
         "version_id": 1000100,

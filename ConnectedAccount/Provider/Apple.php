@@ -72,7 +72,7 @@ class Apple extends AbstractProvider
      */
     public function getTitle()
     {
-        return '[tl] Sign in with Apple';
+        return XF::phrase('asi_connected_account_provider_apple');
     }
 
     protected function getClientSecret(array $options): string
