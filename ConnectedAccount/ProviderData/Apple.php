@@ -37,14 +37,11 @@ class Apple extends AbstractProviderData
         return $user->sub;
     }
 
-    public function getEmail(): string
+    public function getEmail(): ?string
     {
         $user = $this->getUser();
-        if (!isset($user->email)) {
-            throw new LogicException('Apple did not give user email');
-        }
 
-        return $user->email;
+        return $user->email ?? null;
     }
 
     /**
